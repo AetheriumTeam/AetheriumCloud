@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управление сервером - AetherCloud</title>
+    
+    <style>
+        /* ============================================
+           ОБЩИЕ СТИЛИ
+           ============================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a1628 0%, #1a2f4f 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        /* ============================================ */
+
+
+        /* ============================================
+           ШАПКА (header)
+           ============================================ */
+        .header {
+            padding: 20px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 22, 40, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid rgba(255, 200, 87, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo img {
+            width: 40px;
+            height: 40px;
+        }
+
+        .logo h1 {
+            font-size: 24px;
+            background: linear-gradient(135deg, #ffc857 0%, #ffeb3b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .back-link {
+            padding: 10px 25px;
+            background: transparent;
+            border: 2px solid #ffc857;
+            border-radius: 25px;
+            color: #ffc857;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            background: #ffc857;
+            color: #0a1628;
+        }
+        /* ============================================ */
+
+
+        /* ============================================
+           КОНТЕЙНЕР УПРАВЛЕНИЯ (manage-container)
+           ============================================ */
+        .manage-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 5%;
+        }
+
+        .server-title {
+            margin-bottom: 30px;
+        }
+
+        .server-title h2 {
+            font-size: 36px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #ffc857 0%, #ffeb3b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .server-title p {
+            color: #b0c4de;
+            font-size: 16px;
+        }
+        /* ============================================ */
+
+
+        /* ============================================
+           СЕТКА С СЕКЦИЯМИ (sections-grid)
+           Разделяет страницу на блоки управления
+           ============================================ */
+        .sections-grid {
+            display: grid; /* CSS Grid */
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); /* Автоматическое размещение */
+            gap: 25px; /* Отступ между секциями */
+        }
+
+        /* Секция - отдельный блок функционала */
+        .section {
+            background: rgba(26, 47, 79, 0.8); /* Полупрозрачный фон */
+            padding: 30px; /* Внутренние отступы */
+            border-radius: 20px; /* Скругленные углы */
+            border: 2px solid rgba(255, 200, 87, 0.2); /* Золотая рамка */
+            backdrop-filter: blur(10px); /* Размытие */
+        }
+
+        .section h3 {
+            font-size: 22px; /* Размер заголовка */
+            margin-bottom: 20px; /* Отступ снизу */
+            color: #ffc857; /* Золотой цвет */
+            display: flex; /* Flexbox для иконки */
+            align-items: center; /* По центру */
+            gap: 10px; /* Отступ между иконкой и текстом */
+        }
+        /* ============================================ */
+
+
+        /* ============================================
+           СТАТУС СЕРВЕРА (server-status-display)
+           Показывает текущее состояние сервера
+           ============================================ */
+        .server-status-display {
+            background: rgba(10, 22, 40, 0.6); /* Темный фон */
+            padding: 20px; /* Отступы */
+            border-radius: 15px; /* Скругленные углы */
+            margin-bottom: 20px; /* Отступ снизу */
+        }
+
+        .status-indicator {
+            display: flex; /* Flexbox */
+            align-items: center; /* По центру вертикально */
+            gap: 15px; /* Отступ между элементами */
+            margin-bottom: 15px; /* Отступ снизу */
+        }
+
+        .status-dot {
+            width: 20px; /* Ширина точки */
+            height: 20px; /* Высота точки */
+            border-radius: 50%; /* Круглая форма */
+            animation: pulse 2s infinite; /* Анимация пульсации */
+        }
+
+        /* Анимация пульсации */
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1; /* Полная видимость */
+            }
+            50% {
+                opacity: 0.5; /* Полупрозрачность */
+            }
+        }
+
+        .status-online {
+            background: #4ade80; /* Зеленый для онлайн */
+            box-shadow: 0 0 20px rgba(74, 222, 128, 0.6); /* Свечение */
+        }
+
+        .status-offline {
+            background: #ef4444; /* Красный для офлайн */
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.6); /* Свечение */
+        }
+
+        .status-text {
+            font-size: 18px; /* Размер текста */
+            font-weight: 600; /* Полужирный */
+        }
+
+        .stat-item {
+            display: flex; /* Flexbox */
+            justify-content: space-between; /* По краям */
+            padding: 10px 0; /* Отступы */
+            border-bottom: 1px solid rgba(255, 200, 87, 0.1); /* Нижняя линия */
+        }
+
+        .stat-item:last-child {
+            border-bottom: none; /* Убираем у последнего */
+        }
+
+        .stat-label {
+            color: #b0c4de; /* Светло-голубой */
+        }
+
+        .stat-value {
+            font-weight: 600; /* Полужирный */
+        }
+        /* ============================================ */
+
+
+        /* ============================================
+           КНОПКИ УПРАВЛЕНИЯ (control-buttons)
+           Кнопки запуска, остановки, перезагрузки
+           ============================================ */
+        .control-buttons {
+            display: grid; /* CSS Grid */
+            grid-template-columns: repeat(2, 1fr); /* 2 колонки */
+            gap: 15px; /* Отступ между кнопками */
+        }
+
+        .control-btn {
+            padding: 15px; /* Внутренние отступы */
+            border-radius: 10px; /* Скругленные углы */
+            border: none; /* Без рамки */
+            font-weight: 600; /* Полужирный */
+            font-size: 14px; /* Размер текста */
+            cursor: pointer; /* Курсор-указатель */
+            transition: all 0.3s; /* Плавный переход */
+            display: flex; /* Flexbox */
+            align-items: center; /* По центру */
+            justify-content: center; /* По центру */
+            gap: 8px; /* Отступ между иконкой и текстом */
+        }
+
+        /* Кнопка запуска (зеленая) */
+        .btn-start {
+            background: rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+            border: 2px solid #4ade80;
+        }
+
+        .btn-start:hover {
+            background: rgba(74, 222, 128, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Кнопка остановки (красная) */
+        .btn-stop {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 2px solid #ef4444;
+        }
+
+        .btn-stop:hover {
+            background: rgba(239, 68, 68, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Кнопка перезагрузки (синяя) */
+        .btn-restart {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+            border: 2px solid #3b82f6;
+        }
+
+        .btn-restart:hover {
+            background: rgba(59, 130, 246, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Кнопка сброса (оранжевая) */
+        .btn-reset {
+            background: rgba(249, 115, 22, 0.2);
+            color: #f97316;
+            border: 2px solid #f97316;
+        }
+
+        .btn-reset:hover {
+            background: rgba(249, 115, 22, 0.3);
+            transform: translateY(-2px);
+        }
+        /* ============================================ */
+
+
+        /* ============================================
+           КОНСОЛЬ (console)
+           Отображает логи сервера
+           ============================================ */
+        .console {
+            background: rgba(10, 22, 40, 0.9); /* Очень темный фон */
+            padding: 20px; /* Отступы */
+            border-radius: 10px; /* Скругленные углы */
+            font-family: 'Courier New', monospace; /* Моноширинный шрифт */
+            font-size: 13px; /* Размер текста */
+            color: #4ade80; /* Зеленый текст как в терминале */
+            height: 300px; /* Высота консоли */
+            overflow-y: auto; /* Прокрутка по вертикали */
+            border: 1px solid rgba(255, 200, 87, 0.2); /* Золотая рамка */
+        }
+
+        .console-line {
+            margin-bottom: 5px; /* Отступ между строками */
+            opacity: 0.8; /* Слегка прозрачный */
+        }
+
+        /* Полоса прокрутки консоли */
+        .console::-webkit-scrollbar {
+            width: 8px; /* Ширина полосы */
+        }
+
+        .console::-webkit-scrollbar-track {
+            background: rgba(10, 22, 40, 0.5); /* Фон трека */
+        }
+
+        .console::-webkit-scrollbar-thumb {
+            background: rgba(255, 200, 87, 0.3); /* Цвет ползунка */
+            border-radius: 4px; /* Скругленные углы */
+        }
+        /* ============================================ */
+
+
+        /* ============================================
+           ФОРМА ВВОДА (input-group)
+           Поля для ввода данных
+           ============================================ */
+        .input-group {
+            margin-bottom: 20px; /* Отступ снизу */
+        }
+
+        .input-group label {
+            display: block; /* На всю ширину */
+            margin-bottom: 8px; /* Отступ снизу */
+            color: #b0c4de; /* Светло-голубой */
+            font-size: 14px; /* Размер текста */
+            font-weight: 600; /* Полужирный */
+        }
+
+        .input-group input,
+        .input-group select {
+            width: 100%; /* Ширина 100% */
+            padding: 12px; /* Внутренние отступы */
+            background: rgba(10, 22, 40, 0.6); /* Темный фон */
+            border: 2px solid rgba(255, 200, 87, 0.3); /* Золотая рамка */
+            border-radius: 10px; /* Скругленные углы */
+            color: #fff; /* Белый текст */
+            font-size: 14px; /* Размер текста */
+            transition: all 0.3s; /* Плавный переход */
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none; /* Убираем стандартную обводку */
+            border-color: #ffc857; /* Яркая золотая рамка */
+            box-shadow: 0 0 15px rgba(255, 200, 87, 0.3); /* Свечение */
+        }
+
+        /* Кнопка сохранения */
+        .save-btn {
+            width: 100%; /* Ширина 100% */
+            padding: 12px; /* Отступы */
+            background: linear-gradient(135deg, #ffc857 0%, #ffeb3b 100%); /* Золотой градиент */
+            border: none; /* Без рамки */
+            border-radius: 10px; /* Скругленные углы */
+            color: #0a1628; /* Темный текст */
+            font-weight: 700; /* Жирный */
+            font-size: 14px; /* Размер */
+            cursor: pointer; /* Курсор */
+            transition: all 0.3s; /* Переход */
+        }
+
+        .save-btn:hover {
+            transform: translateY(-2px); /* Поднимается */
+            box-shadow: 0 8px 20px rgba(255, 200, 87, 0.4); /* Тень */
+        }
+        /* ============================================ */
+
+
+        /* ============================================
+           СПИСОК ФАЙЛОВ (file-list)
+           Менеджер файлов сервера
+           ============================================ */
+        .file-list {
+            background: rgba(10, 22, 40, 0.6); /* Темный фон */
+            border-radius: 10px; /* Скругленные углы */
+            overflow: hidden; /* Скрываем выходящее за края */
+            max-height: 300px; /* Максимальная высота */
+            overflow-y: auto; /* Прокрутка */
+        }
+
+        .file-item {
+            padding: 15px; /* Отступы */
+            border-bottom: 1px solid rgba(255, 200, 87, 0.1); /* Нижняя линия */
+            display: flex; /* Flexbox */
+            justify-content: space-between; /* По краям */
+            align-items: center; /* По центру вертикально */
+            transition: all 0.2s; /* Переход */
+        }
+
+        .file-item:hover {
+            background: rgba(255, 200, 87, 0.1); /* Светлый фон при наведении */
+        }
+
+        .file-item:last-child {
+            border-bottom: none; /* Убираем линию у последнего */
+        }
+
+        .file-name {
+            color: #fff; /* Белый текст */
+            font-size: 14px; /* Размер */
+        }
+
+        .file-actions {
+            display: flex; /* Flexbox */
+            gap: 10px; /* Отступ между кнопками */
+        }
+
+        .file-action-btn {
+            padding: 6px 12px; /* Отступы */
+            background: rgba(255, 200, 87, 0.2); /* Золотой фон */
+            border: 1px solid rgba(255, 200, 87, 0.4); /* Рамка */
+            border-radius: 6px; /* Скругленные углы */
+            color: #ffc857; /* Золотой текст */
+            font-size: 12px; /* Маленький размер */
+            cursor: pointer; /* Курсор */
+            transition: all 0.2s; /* Переход */
+        }
+
+        .file-action-btn:hover {
+            background: rgba(255, 200, 87, 0.3); /* Ярче при наведении */
+        }
+        /* ============================================ */
+
+
+        /* ============================================
+           АДАПТАЦИЯ ПОД МОБИЛЬНЫЕ
+           ============================================ */
+        @media (max-width: 768px) {
+            .sections-grid {
+                grid-template-columns: 1fr; /* Одна колонка */
+            }
+
+            .control-buttons {
+                grid-template-columns: 1fr; /* Кнопки в столбик */
+            }
+
+            .server-title h2 {
+                font-size: 28px; /* Меньший заголовок */
+            }
+        }
+        /* ============================================ */
+    </style>
+</head>
+<body>
+    <!-- ============================================
+         ШАПКА
+         ============================================ -->
+    <header class="header">
+        <div class="logo">
+            <img src="logo.png" alt="AetherCloud">
+            <h1>AetherCloud</h1>
+        </div>
+        
+        <a href="dashboard.html" class="back-link">← Назад к серверам</a>
+    </header>
+
+    <!-- ============================================
+         КОНТЕЙНЕР УПРАВЛЕНИЯ
+         ============================================ -->
+    <div class="manage-container">
+        <div class="server-title">
+            <h2>🎮 Основной Сервер</h2>
+            <p>Управление и настройка сервера</p>
+        </div>
+
+        <!-- ============================================
+             СЕТКА С СЕКЦИЯМИ УПРАВЛЕНИЯ
+             ============================================ -->
+        <div class="sections-grid">
+            
+            <!-- СЕКЦИЯ 1: СТАТУС И УПРАВЛЕНИЕ -->
+            <div class="section">
+                <h3>⚡ Статус и управление</h3>
+                
+                <!-- Текущий статус сервера -->
+                <div class="server-status-display">
+                    <div class="status-indicator">
+                        <div class="status-dot status-online"></div>
+                        <span class="status-text">Сервер работает</span>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <span class="stat-label">Игроки онлайн:</span>
+                        <span class="stat-value">5 / 30</span>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <span class="stat-label">Использование RAM:</span>
+                        <span class="stat-value">2.1 / 4 GB (52%)</span>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <span class="stat-label">Нагрузка CPU:</span>
+                        <span class="stat-value">35%</span>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <span class="stat-label">Использование SSD:</span>
+                        <span class="stat-value">8.5 / 25 GB</span>
+                    </div>
+                </div>
+
+                <!-- Кнопки управления -->
+                <div class="control-buttons">
+                    <button class="control-btn btn-start">▶ Запустить</button>
+                    <button class="control-btn btn-stop">■ Остановить</button>
+                    <button class="control-btn btn-restart">↻ Перезапустить</button>
+                    <button class="control-btn btn-reset">⚠ Сбросить мир</button>
+                </div>
+            </div>
+
+            <!-- СЕКЦИЯ 2: НАСТРОЙКИ СЕРВЕРА -->
+            <div class="section">
+                <h3>⚙️ Настройки сервера</h3>
+                
+                <!-- Название сервера -->
+                <div class="input-group">
+                    <label for="server-name">Название сервера</label>
+                    <input type="text" id="server-name" value="Основной Сервер" placeholder="Введите название">
+                </div>
+
+                <!-- Версия Minecraft -->
+                <div class="input-group">
+                    <label for="mc-version">Версия Minecraft</label>
+                    <select id="mc-version">
+                        <option value="1.20.4">1.20.4 (Paper)</option>
+                        <option value="1.20.3">1.20.3 (Paper)</option>
+                        <option value="1.19.4">1.19.4 (Vanilla)</option>
+                        <option value="1.19.3">1.19.3 (Forge)</option>
+                        <option value="1.18.2">1.18.2 (Fabric)</option>
+                    </select>
+                </div>
+
+                <!-- Максимум игроков -->
+                <div class="input-group">
+                    <label for="max-players">Максимум игроков</label>
+                    <input type="number" id="max-players" value="30" min="1" max="100">
+                </div>
+
+                <!-- Порт сервера -->
+                <div class="input-group">
+                    <label for="server-port">Порт сервера</label>
+                    <input type="number" id="server-port" value="25565" readonly>
+                </div>
+
+                <!-- Кнопка сохранения -->
+                <button class="save-btn">💾 Сохранить изменения</button>
+            </div>
+
+            <!-- СЕКЦИЯ 3: КОНСОЛЬ -->
+            <div class="section" style="grid-column: span 2;">
+                <h3>📟 Консоль сервера</h3>
+                
+                <!-- Окно консоли с логами -->
+                <div class="console">
+                    <div class="console-line">[12:34:56] [Server thread/INFO]: Starting minecraft server version 1.20.4</div>
+                    <div class="console-line">[12:34:57] [Server thread/INFO]: Loading properties</div>
+                    <div class="console-line">[12:34:58] [Server thread/INFO]: Default game type: SURVIVAL</div>
+                    <div class="console-line">[12:34:59] [Server thread/INFO]: Generating keypair</div>
+                    <div class="console-line">[12:35:00] [Server thread/INFO]: Starting Minecraft server on *:25565</div>
+                    <div class="console-line">[12:35:01] [Server thread/INFO]: Preparing level "world"</div>
+                    <div class="console-line">[12:35:02] [Server thread/INFO]: Preparing spawn area: 0%</div>
+                    <div class="console-line">[12:35:03] [Server thread/INFO]: Preparing spawn area: 25%</div>
+                    <div class="console-line">[12:35:04] [Server thread/INFO]: Preparing spawn area: 50%</div>
+                    <div class="console-line">[12:35:05] [Server thread/INFO]: Preparing spawn area: 75%</div>
+                    <div class="console-line">[12:35:06] [Server thread/INFO]: Preparing spawn area: 100%</div>
+                    <div class="console-line">[12:35:07] [Server thread/INFO]: Done! For help, type "help"</div>
+                    <div class="console-line">[12:36:15] [User Authenticator #1/INFO]: UUID of player Steve is 069a79f4-44e9-4726-a5be-fca90e38aaf5</div>
+                    <div class="console-line">[12:36:16] [Server thread/INFO]: Steve joined the game</div>
+                </div>
+
+                <!-- Поле для ввода команд -->
+                <div class="input-group" style="margin-top: 15px;">
+                    <label for="console-input">Отправить команду</label>
+                    <input type="text" id="console-input" placeholder="/say Hello World" style="margin-bottom: 10px;">
+                    <button class="save-btn">📤 Отправить</button>
+                </div>
+            </div>
+
+            <!-- СЕКЦИЯ 4: МЕНЕДЖЕР ФАЙЛОВ -->
+            <div class="section">
+                <h3>📁 Файлы сервера</h3>
+                
+                <!-- Список файлов -->
+                <div class="file-list">
+                    <div class="file-item">
+                        <span class="file-name">📄 server.properties</span>
+                        <div class="file-actions">
+                            <button class="file-action-btn">✏️ Редактировать</button>
+                            <button class="file-action-btn">⬇️ Скачать</button>
+                        </div>
+                    </div>
+                    
+                    <div class="file-item">
+                        <span class="file-name">📄 ops.json</span>
+                        <div class="file-actions">
+                            <button class="file-action-btn">✏️ Редактировать</button>
+                            <button class="file-action-btn">⬇️ Скачать</button>
+                        </div>
+                    </div>
+                    
+                    <div class="file-item">
+                        <span class="file-name">📄 whitelist.json</span>
+                        <div class="file-actions">
+                            <button class="file-action-btn">✏️ Редактировать</button>
+                            <button class="file-action-btn">⬇️ Скачать</button>
+                        </div>
+                    </div>
+                    
+                    <div class="file-item">
+                        <span class="file-name">📁 plugins/</span>
+                        <div class="file-actions">
+                            <button class="file-action-btn">📂 Открыть</button>
+                        </div>
+                    </div>
+                    
+                    <div class="file-item">
+                        <span class="file-name">📁 world/</span>
+                        <div class="file-actions">
+                            <button class="file-action-btn">📂 Открыть</button>
+                            <button class="file-action-btn">⬇️ Скачать</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Кнопка загрузки файлов -->
+                <button class="save-btn" style="margin-top: 15px;">📤 Загрузить файлы</button>
+            </div>
+
+            <!-- СЕКЦИЯ 5: РЕЗЕРВНЫЕ КОПИИ -->
+            <div class="section">
+                <h3>💾 Резервные копии</h3>
+                
+                <!-- Список бэкапов -->
+                <div class="file-list">
+                    <div class="file-item">
+                        <span class="file-name">🗄️ backup_2024-12-10_12-00.zip</span>
+                        <div class="file-actions">
+                            <button class="file-action-btn">↻ Восстановить</button>
+                            <button class="file-action-btn">⬇️ Скачать</button>
+                        </div>
+                    </div>
+                    
+                    <div class="file-item">
+                        <span class="file-name">🗄️ backup_2024-12-09_12-00.zip</span>
+                        <div class="file-actions">
+                            <button class="file-action-btn">↻ Восстановить</button>
+                            <button class="file-action-btn">⬇️ Скачать</button>
+                        </div>
+                    </div>
+                    
+                    <div class="file-item">
+                        <span class="file-name">🗄️ backup_2024-12-08_12-00.zip</span>
+                        <div class="file-actions">
+                            <button class="file-action-btn">↻ Восстановить</button>
+                            <button class="file-action-btn">⬇️ Скачать</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Кнопка создания бэкапа -->
+                <button class="save-btn" style="margin-top: 15px;">✨ Создать резервную копию</button>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>
